@@ -55,64 +55,34 @@ export default {
 			return new Response('Hello World!');
 		}
 
-		if (path === '/upload/image' && method === 'POST') {
+		if (path === '/upload' && method === 'POST') {
 			const uid = await verifyAuth(request);
 			if (!uid) {
 				return new Response('Unauthorized', { status: 401 });
 			}
 			const formData = await request.formData();
-			const images = formData.getAll('images') as File[];
-			const imageIds = images.map((image) => {
-				if (!isImage(image)) {
-					return null;
+			const files = formData.getAll('files') as File[];
+			const fileIds = files.map((file) => {
+				if (!isImage(file) && !isVideo(file)) {
+					return '';
 				}
-				const imageId = generateRandomString(16);
-				env.BUCKET.put(`images/${imageId}`, image);
-				return imageId;
+				const fileId = generateRandomString(16);
+				env.BUCKET.put(`files/${fileId}`, file);
+				return fileId;
 			});
-			return new Response(imageIds.join(', '));
+			return new Response(fileIds.join(', '));
 		}
 
-		if (path.startsWith('/get/image/')) {
-			const imageId = path.split('/get/image/')[1];
-			const image = await env.BUCKET.get(`images/${imageId}`);
-			if (!image) {
+		if (path.startsWith('/get/')) {
+			const fileId = path.split('/get/')[1];
+			const file = await env.BUCKET.get(`files/${fileId}`);
+			if (!file) {
 				return new Response('Not found', { status: 404 });
 			}
 			const headers = new Headers();
-			image.writeHttpMetadata(headers);
-			headers.set('etag', image.httpEtag);
-			return new Response(image.body, { headers });
-		}
-
-		if (path === '/upload/video' && method === 'POST') {
-			const uid = await verifyAuth(request);
-			if (!uid) {
-				return new Response('Unauthorized', { status: 401 });
-			}
-			const formData = await request.formData();
-			const videos = formData.getAll('videos') as File[];
-			const videoIds = videos.map((video) => {
-				if (!isVideo(video)) {
-					return null;
-				}
-				const videoId = generateRandomString(16);
-				env.BUCKET.put(`videos/${videoId}`, video);
-				return videoId;
-			});
-			return new Response(videoIds.join(', '));
-		}
-
-		if (path.startsWith('/get/video/')) {
-			const videoId = path.split('/get/video/')[1];
-			const video = await env.BUCKET.get(`videos/${videoId}`);
-			if (!video) {
-				return new Response('Not found', { status: 404 });
-			}
-			const headers = new Headers();
-			video.writeHttpMetadata(headers);
-			headers.set('etag', video.httpEtag);
-			return new Response(video.body, { headers });
+			file.writeHttpMetadata(headers);
+			headers.set('etag', file.httpEtag);
+			return new Response(file.body, { headers });
 		}
 
 		return new Response('Not found', { status: 404 });
