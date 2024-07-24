@@ -62,15 +62,16 @@ export default {
 			}
 			const formData = await request.formData();
 			const files = formData.getAll('files') as File[];
-			const fileIds = files.map((file) => {
-				if (!isImage(file) && !isVideo(file)) {
-					return '';
-				}
-				const fileId = generateRandomString(16);
-				env.BUCKET.put(`files/${fileId}`, file);
-				return fileId;
-			});
-			return new Response(fileIds.join(', '));
+			const fileIds = await Promise.all(
+				files.map((file) => {
+					if (!isImage(file) && !isVideo(file)) {
+						return '';
+					}
+					const fileId = generateRandomString(16);
+					return env.BUCKET.put(`files/${fileId}`, file).then(() => fileId);
+				}),
+			);
+			return new Response(JSON.stringify(fileIds));
 		}
 
 		if (path.startsWith('/get/')) {
