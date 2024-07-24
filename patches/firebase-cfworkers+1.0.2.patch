@@ -1,0 +1,30 @@
+diff --git a/node_modules/firebase-cfworkers/dist/util/jwt.js b/node_modules/firebase-cfworkers/dist/util/jwt.js
+index de6963e..3908569 100644
+--- a/node_modules/firebase-cfworkers/dist/util/jwt.js
++++ b/node_modules/firebase-cfworkers/dist/util/jwt.js
+@@ -35,9 +35,9 @@ function generateToken(serviceAccountCredentials) {
+ exports.generateToken = generateToken;
+ function getPublicKey() {
+     return __awaiter(this, void 0, void 0, function* () {
+-        const response = yield fetch(`https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com`);
++        const response = yield fetch(`https://www.googleapis.com/robot/v1/metadata/jwk/securetoken@system.gserviceaccount.com`);
+         const json = yield response.json();
+-        return json;
++        return json.keys;
+     });
+ }
+ function verifyToken(token, project_id) {
+@@ -58,11 +58,11 @@ function verifyToken(token, project_id) {
+         if (payload.aud !== project_id || payload.iss !== `https://securetoken.google.com/${project_id}` || payload.sub === '') {
+             return '';
+         }
+-        const publicKey = publicKeys[header.kid];
++        const publicKey = publicKeys.find(({ kid }) => kid === header.kid);
+         if (!publicKey) {
+             return '';
+         }
+-        if (yield cloudflare_worker_jwt_1.default.verify(token, publicKey)) {
++        if (yield cloudflare_worker_jwt_1.default.verify(token, publicKey, "RS256")) {
+             return payload.sub;
+         }
+         return '';

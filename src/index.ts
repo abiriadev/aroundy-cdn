@@ -21,7 +21,7 @@ function isVideo(file: File): boolean {
 
 async function verifyAuth(request: any): Promise<string> {
 	const app = getApp();
-	app.initializeApp({
+	await app.initializeApp({
 		"type": "service_account",
 		"project_id": "aroundy-69661",
 		"private_key_id": "6c6243bf4359b033cc244750af276a55dfd86fb2",
