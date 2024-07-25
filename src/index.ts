@@ -88,6 +88,12 @@ export default {
 			return new Response(file.body, { headers });
 		}
 
-		return new Response('Not found', { status: 404 });
+		// default route
+		return new Response(
+			JSON.stringify({
+				msg: 'Unknown operation',
+			}),
+			{ status: 405 },
+		);
 	},
 } satisfies ExportedHandler<Env>;
